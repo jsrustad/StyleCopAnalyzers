@@ -15,6 +15,7 @@ namespace StyleCop.Analyzers.Test.ReadabilityRules
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis.Testing;
+    using StyleCop.Analyzers.Test.Helpers;
     using Xunit;
     using static StyleCop.Analyzers.Test.Verifiers.StyleCopCodeFixVerifier<
         StyleCop.Analyzers.ReadabilityRules.SA1116SplitParametersMustStartOnLineAfterDeclaration,
@@ -275,8 +276,10 @@ class ObsoleteType
             await VerifyCSharpDiagnosticAsync(testCode, DiagnosticResult.EmptyDiagnosticResults, CancellationToken.None).ConfigureAwait(false);
         }
 
-        [Fact]
-        public async Task TestInvalidAttributeAsync()
+        [Theory]
+        [InlineData("\n")]
+        [InlineData("\r\n")]
+        public async Task TestInvalidAttributeAsync(string lineEnding)
         {
             var testCode = @"
 [System.AttributeUsage(System.AttributeTargets.Class)]
@@ -287,11 +290,11 @@ public class MyAttribute : System.Attribute
     }
 }
 
-[MyAttribute(1,
+[MyAttribute({|#0:1|},
       2)]
 class Foo
 {
-}";
+}".ReplaceLineEndings(lineEnding);
             var fixedCode = @"
 [System.AttributeUsage(System.AttributeTargets.Class)]
 public class MyAttribute : System.Attribute
@@ -306,9 +309,9 @@ public class MyAttribute : System.Attribute
       2)]
 class Foo
 {
-}";
+}".ReplaceLineEndings(lineEnding);
 
-            DiagnosticResult expected = Diagnostic().WithLocation(10, 14);
+            DiagnosticResult expected = Diagnostic().WithLocation(0);
             await VerifyCSharpFixAsync(testCode, expected, fixedCode, CancellationToken.None).ConfigureAwait(false);
         }
     }
